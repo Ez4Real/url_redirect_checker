@@ -1,14 +1,16 @@
 import re
 import csv
 import requests
+from urllib.parse import urlparse
 
 def check_redirect(domain):
     url = 'http://' + domain
+    print('URL ', url)
     try:
-        response = requests.head(url, allow_redirects=True, timeout=30)
-        final_url = response.url
+        response = requests.get(url, allow_redirects=True, timeout=30)
+        final_url = urlparse(response.url).netloc
         print("Current URL: ", final_url)
-        if url != final_url:
+        if domain != final_url:
             print('Redirect from ', domain, ' to ', final_url)
             return final_url, "Redirected"
         else:
@@ -17,24 +19,8 @@ def check_redirect(domain):
     except requests.exceptions.RequestException as e:
         host_match = re.search(r"host='(.*?)'", str(e))
         if host_match and host_match.group(1) != domain:
-            return host_match, f"Error: {e}"
+            return host_match.group(1), f"Error: {e}"
         return None, f"Error: {e}"
-    
-    
-    # try:
-    #     response = requests.head(domain, allow_redirects=True, timeout=30)
-    #     print("Response: ", response)
-    #     final_url = response.url
-    #     print("Current URL: ", final_url)
-    #     if domain != final_url:
-    #         print('Redirect from ', domain, ' to ', final_url)
-    #         return final_url, "Redirected"
-    #     else:
-    #         print('No redirect from ', domain)
-    #         return None, "No Redirection"
-    # except requests.exceptions.RequestException as e:
-    #     print(e)
-    #     return None, f"Error: {e}"
 
 def main():
     with open('domains.txt', 'r') as file:
