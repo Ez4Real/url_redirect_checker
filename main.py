@@ -3,14 +3,13 @@ import csv
 import requests
 from urllib.parse import urlparse
 from concurrent.futures import ThreadPoolExecutor
+from urllib3.exceptions import LocationParseError
 
 def check_redirect(domain):
     url = 'http://' + domain
-    print('URL ', url)
     try:
         response = requests.get(url, allow_redirects=True, timeout=30)
         final_url = urlparse(response.url).netloc
-        print("Current URL: ", final_url)
         if domain != final_url:
             return final_url, "Redirected successfully"
         else:
@@ -20,6 +19,10 @@ def check_redirect(domain):
         if host_match and host_match.group(1) != domain:
             return host_match.group(1), f"Error: {e}"
         return None, f"Error: {e}"
+    except LocationParseError as e:
+        return None, "Error parsing domain"
+    except Exception as e:
+        return None, "Unexpected error intercepted"
 
 def main():
     with open('domains.txt', 'r') as file:
